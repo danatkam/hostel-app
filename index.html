@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Бронирование капсулы</title>
+    <!-- Подключаем скрипт Telegram для работы внутри мессенджера -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
+    <style>
+        /* Внешний вид нашего приложения */
+        body { 
+            font-family: Arial, sans-serif; 
+            background-color: #242333; /* Темный фон */
+            color: white; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+        }
+        .container { margin-top: 20px; }
+        .row { display: flex; justify-content: center; margin-bottom: 10px; }
+        
+        /* Квадратики капсул */
+        .seat { 
+            background-color: #444451; 
+            height: 50px; 
+            width: 70px; 
+            margin: 5px; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            font-size: 12px;
+            text-align: center;
+        }
+        /* Цвет выбранного места */
+        .seat.selected { background-color: #6feaf6; color: black; font-weight: bold;}
+        /* Цвет занятого места */
+        .seat.occupied { background-color: #fff; color: #000; pointer-events: none; }
+        
+        .btn { 
+            margin-top: 20px; 
+            padding: 15px 30px; 
+            background-color: #6feaf6; 
+            border: none; 
+            border-radius: 5px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <h2>Выберите капсулу</h2>
+    
+    <!-- Схема мест -->
+    <div class="container">
+        <div class="row">
+            <div class="seat">Капсула 1<br>(Низ)</div>
+            <div class="seat occupied">Капсула 2<br>(Занято)</div>
+        </div>
+        <div class="row">
+            <div class="seat">Капсула 3<br>(Низ)</div>
+            <div class="seat">Капсула 4<br>(Верх)</div>
+        </div>
+    </div>
+    
+    <button class="btn" id="bookBtn">Забронировать</button>
+
+    <script>
+        // Инициализация Telegram Mini App
+        let tg = window.Telegram.WebApp;
+        tg.expand(); // Разворачиваем приложение на весь экран телефона
+
+        // Логика выбора места
+        const seats = document.querySelectorAll('.row .seat:not(.occupied)');
+        let selectedSeat = null;
+
+        seats.forEach(seat => {
+            seat.addEventListener('click', (e) => {
+                // Убираем выделение со всех мест
+                seats.forEach(s => s.classList.remove('selected'));
+                // Добавляем выделение на то, куда кликнули
+                e.target.classList.add('selected');
+                selectedSeat = e.target.innerText;
+            });
+        });
+
+        // Действие при нажатии на кнопку
+        document.getElementById('bookBtn').addEventListener('click', () => {
+            if(selectedSeat) {
+                // В будущем здесь мы отправим сигнал webhook в n8n
+                tg.showAlert("Вы выбрали: " + selectedSeat + ". Данные готовы к отправке!");
+            } else {
+                tg.showAlert("Пожалуйста, выберите свободное место!");
+            }
+        });
+    </script>
+</body>
+</html>
