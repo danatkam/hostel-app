@@ -4,14 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Бронирование капсулы</title>
-    <!-- Подключаем скрипт Telegram для работы внутри мессенджера -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     
     <style>
-        /* Внешний вид нашего приложения */
         body { 
             font-family: Arial, sans-serif; 
-            background-color: #242333; /* Темный фон */
+            background-color: #242333; 
             color: white; 
             display: flex; 
             flex-direction: column; 
@@ -20,7 +18,6 @@
         .container { margin-top: 20px; }
         .row { display: flex; justify-content: center; margin-bottom: 10px; }
         
-        /* Квадратики капсул */
         .seat { 
             background-color: #444451; 
             height: 50px; 
@@ -34,9 +31,7 @@
             font-size: 12px;
             text-align: center;
         }
-        /* Цвет выбранного места */
         .seat.selected { background-color: #6feaf6; color: black; font-weight: bold;}
-        /* Цвет занятого места */
         .seat.occupied { background-color: #fff; color: #000; pointer-events: none; }
         
         .btn { 
@@ -54,7 +49,6 @@
 <body>
     <h2>Выберите капсулу</h2>
     
-    <!-- Схема мест -->
     <div class="container">
         <div class="row">
             <div class="seat">Капсула 1<br>(Низ)</div>
@@ -69,29 +63,42 @@
     <button class="btn" id="bookBtn">Забронировать</button>
 
     <script>
-        // Инициализация Telegram Mini App
         let tg = window.Telegram.WebApp;
-        tg.expand(); // Разворачиваем приложение на весь экран телефона
+        tg.expand(); 
 
-        // Логика выбора места
         const seats = document.querySelectorAll('.row .seat:not(.occupied)');
         let selectedSeat = null;
 
         seats.forEach(seat => {
             seat.addEventListener('click', (e) => {
-                // Убираем выделение со всех мест
                 seats.forEach(s => s.classList.remove('selected'));
-                // Добавляем выделение на то, куда кликнули
                 e.target.classList.add('selected');
                 selectedSeat = e.target.innerText;
             });
         });
 
-        // Действие при нажатии на кнопку
         document.getElementById('bookBtn').addEventListener('click', () => {
             if(selectedSeat) {
-                // В будущем здесь мы отправим сигнал webhook в n8n
-                tg.showAlert("Вы выбрали: " + selectedSeat + ". Данные готовы к отправке!");
+                let user = tg.initDataUnsafe?.user;
+                let guestName = user ? user.first_name : "Гость";
+                let guestId = user ? user.id : 0;
+
+                // Отправляем данные в n8n
+                fetch("https://n8n.uhostkz.qzz.io/webhook-test/569f2c4f-ee3f-42f2-9873-d83cd983a334", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        capsule: selectedSeat,
+                        name: guestName,
+                        telegram_id: guestId
+                    })
+                }).then(response => {
+                    tg.showAlert("Запрос отправлен! Закрываем карту.");
+                    tg.close(); 
+                });
+
             } else {
                 tg.showAlert("Пожалуйста, выберите свободное место!");
             }
