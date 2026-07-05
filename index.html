@@ -92,7 +92,7 @@
                     body: JSON.stringify({
                         capsule: selectedSeat,
                         name: guestName,
-                        telegram_id: guestId
+                        chat_id: guestId // ТУТ Я ПОМЕНЯЛ telegram_id НА chat_id
                     })
                 }).then(response => {
                     tg.showAlert("Запрос отправлен! Закрываем карту.");
