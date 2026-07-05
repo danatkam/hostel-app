@@ -44,6 +44,20 @@
             font-weight: bold; 
             font-size: 16px;
         }
+
+        /* Новые стили для выбора времени */
+        .time-select {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        select {
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
@@ -58,6 +72,17 @@
             <div class="seat">Капсула 3<br>(Низ)</div>
             <div class="seat">Капсула 4<br>(Верх)</div>
         </div>
+    </div>
+    
+    <!-- НОВЫЙ БЛОК: Выпадающий список выбора времени -->
+    <div class="time-select">
+        <label for="duration">На сколько времени бронируем?</label>
+        <select id="duration">
+            <option value="3600000">На 1 час</option>
+            <option value="86400000" selected>На 1 сутки</option>
+            <option value="604800000">На 7 суток</option>
+            <option value="2592000000">На 30 дней</option>
+        </select>
     </div>
     
     <button class="btn" id="bookBtn">Забронировать</button>
@@ -83,6 +108,9 @@
                 let guestName = user ? user.first_name : "Гость";
                 let guestId = user ? user.id : 0;
 
+                // НОВОЕ: Получаем выбранное время (в миллисекундах)
+                let duration = parseInt(document.getElementById('duration').value);
+
                 // Отправляем данные в n8n
                 fetch("https://n8n.uhostkz.qzz.io/webhook-test/569f2c4f-ee3f-42f2-9873-d83cd983a334", {
                     method: "POST",
@@ -92,7 +120,8 @@
                     body: JSON.stringify({
                         capsule: selectedSeat,
                         name: guestName,
-                        chat_id: guestId // ТУТ Я ПОМЕНЯЛ telegram_id НА chat_id
+                        chat_id: guestId,
+                        duration: duration // НОВАЯ СТРОКА: передаем время в n8n
                     })
                 }).then(response => {
                     tg.showAlert("Запрос отправлен! Закрываем карту.");
