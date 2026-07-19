@@ -178,7 +178,8 @@
     <div class="section">
         <h3>Способ оплаты</h3>
         <select id="paymentMethod">
-            <option value="kaspi">Kaspi bank / Единый QR</option>
+            <option value="kaspi">Kaspi bank</option>
+            <option value="other_banks">Другие банки (Единый QR)</option>
             <option value="apple_google">Apple Pay / Google Pay</option>
         </select>
     </div>
@@ -222,16 +223,14 @@
         }
 
         function changeDays(delta, e) {
-            e.stopPropagation(); // Чтобы при клике на +/- карточка не мигала
+            e.stopPropagation(); 
             if (customDays + delta > 0) {
                 customDays += delta;
                 document.getElementById('daysCount').innerText = customDays;
                 
-                // Форматируем сумму с пробелами (например, 4 000)
                 let total = customDays * pricePerDay;
                 document.getElementById('standardTotal').innerText = total.toLocaleString('ru-RU');
                 
-                // Принудительно делаем карточку активной, если пользователь кликнул сразу на +/-
                 document.querySelectorAll('.tariff-card').forEach(card => card.classList.remove('selected'));
                 document.getElementById('card-standard').classList.add('selected');
                 currentTariff = 'standard';
