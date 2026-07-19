@@ -10,9 +10,9 @@
         :root {
             --bg-color: var(--tg-theme-bg-color, #f4f7f6);
             --text-color: var(--tg-theme-text-color, #333);
-            --free-color: #28a745; /* Ярко-зеленый */
-            --occupied-color: #dc3545; /* Ярко-красный */
-            --selected-color: #ffc107; /* Ярко-желтый */
+            --free-color: #28a745; 
+            --occupied-color: #dc3545; 
+            --selected-color: #ffc107; 
         }
         
         body { 
@@ -21,18 +21,15 @@
             background-color: var(--bg-color); 
             color: var(--text-color); 
             margin: 0;
+            padding-bottom: 40px;
         }
         
         h2 { text-align: center; margin-bottom: 15px; font-weight: 700; font-size: 22px; }
+        h3 { margin-top: 0; margin-bottom: 12px; font-size: 16px; color: #111; }
         
-        /* Легенда (Подсказка по цветам) */
+        /* Легенда */
         .legend {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin-bottom: 25px;
-            font-size: 13px;
-            font-weight: 600;
+            display: flex; justify-content: center; gap: 15px; margin-bottom: 25px; font-size: 13px; font-weight: 600;
         }
         .legend-item { display: flex; align-items: center; gap: 6px; }
         .box { width: 16px; height: 16px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
@@ -42,80 +39,73 @@
 
         /* Сетка капсул */
         .capsule-grid { 
-            display: grid; 
-            grid-template-columns: repeat(4, 1fr); 
-            gap: 12px; 
-            margin-bottom: 25px; 
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 25px; 
         }
-        
         .capsule { 
-            padding: 16px 0; 
-            text-align: center; 
-            border-radius: 12px; 
-            font-size: 18px;
-            font-weight: 800;
-            cursor: pointer; 
-            background-color: var(--free-color);
-            color: #ffffff; /* Белые цифры на зеленом/красном фоне */
-            box-shadow: 0 4px 6px rgba(0,0,0,0.15);
-            transition: all 0.2s ease;
+            padding: 16px 0; text-align: center; border-radius: 12px; font-size: 18px; font-weight: 800;
+            cursor: pointer; background-color: var(--free-color); color: #ffffff; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.15); transition: all 0.2s ease;
         }
-        
         .capsule:active { transform: scale(0.95); }
-        
-        .capsule.occupied { 
-            background-color: var(--occupied-color); 
-            cursor: not-allowed; 
-            opacity: 0.9;
-        } 
-        
+        .capsule.occupied { background-color: var(--occupied-color); cursor: not-allowed; opacity: 0.9; } 
         .capsule.selected { 
-            background-color: var(--selected-color); 
-            color: #000000; /* Черные цифры на желтом фоне для читаемости */
-            transform: scale(1.08);
-            box-shadow: 0 6px 12px rgba(255, 193, 7, 0.5);
-            border: 2px solid #d39e00;
+            background-color: var(--selected-color); color: #000000; 
+            transform: scale(1.08); box-shadow: 0 6px 12px rgba(255, 193, 7, 0.5); border: 2px solid #d39e00;
         } 
         
-        /* Блоки выбора тарифов и оплаты */
+        /* Секции */
         .section { 
-            background: #ffffff;
-            padding: 16px;
-            border-radius: 14px;
-            margin-bottom: 15px;
+            background: #ffffff; padding: 16px; border-radius: 14px; margin-bottom: 15px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.06);
         }
         
-        .section h3 { margin-top: 0; margin-bottom: 12px; font-size: 16px; color: #111; }
+        /* Карточки тарифов */
+        .tariffs-container {
+            display: flex; flex-direction: column; gap: 10px;
+        }
+        .tariff-card {
+            border: 2px solid #eee; border-radius: 12px; padding: 12px 15px; cursor: pointer;
+            transition: all 0.2s; position: relative; background-color: #fafafa;
+        }
+        .tariff-card.selected {
+            border-color: #007bff; background-color: #f0f7ff;
+            box-shadow: 0 4px 10px rgba(0, 123, 255, 0.15);
+        }
+        .tariff-header { display: flex; justify-content: space-between; align-items: center; }
+        .tariff-title { font-weight: bold; font-size: 16px; color: #333; }
+        .tariff-price { font-weight: 800; font-size: 16px; color: #000; }
+        .tariff-save { font-size: 12px; color: #28a745; font-weight: 600; margin-top: 4px; }
+        .discount-badge { font-size: 11px; color: #dc3545; font-weight: bold; margin-top: 2px; }
         
+        /* Калькулятор в стандартном тарифе */
+        .calculator {
+            display: none; justify-content: space-between; align-items: center; 
+            margin-top: 10px; padding-top: 10px; border-top: 1px solid #ddd;
+        }
+        .tariff-card.selected .calculator { display: flex; }
+        .calc-controls { display: flex; align-items: center; gap: 10px; }
+        .calc-btn { 
+            width: 30px; height: 30px; border-radius: 6px; border: none; background: #007bff; 
+            color: #fff; font-size: 18px; font-weight: bold; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; user-select: none;
+        }
+        .calc-btn:active { transform: scale(0.9); }
+        .calc-value { font-size: 16px; font-weight: bold; min-width: 20px; text-align: center; }
+        .calc-total { font-weight: bold; font-size: 15px; color: #007bff; }
+
+        /* Выбор способа оплаты */
         select { 
-            width: 100%; 
-            padding: 14px; 
-            border-radius: 10px; 
-            border: 1px solid #ddd;
-            font-size: 15px; 
-            font-weight: 500;
-            background-color: #f8f9fa;
-            color: #333;
-            outline: none;
-            appearance: none; /* Убирает стандартную стрелку в некоторых браузерах */
+            width: 100%; padding: 14px; border-radius: 10px; border: 1px solid #ddd;
+            font-size: 15px; font-weight: 500; background-color: #f8f9fa; color: #333; outline: none;
         }
         select:focus { border-color: #007bff; }
         
         /* Кнопка оплаты */
         .pay-btn { 
-            width: 100%;
-            background-color: var(--tg-theme-button-color, #007bff); 
-            color: var(--tg-theme-button-text-color, #fff); 
-            padding: 16px;
-            border: none; 
-            border-radius: 14px;
-            font-size: 18px; 
-            font-weight: bold; 
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
-            transition: background 0.3s, transform 0.1s;
-            margin-top: 10px;
+            width: 100%; background-color: var(--tg-theme-button-color, #007bff); 
+            color: var(--tg-theme-button-text-color, #fff); padding: 16px; border: none; 
+            border-radius: 14px; font-size: 18px; font-weight: bold; cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3); transition: background 0.3s, transform 0.1s; margin-top: 10px;
         }
         .pay-btn:active { background-color: #0056b3; transform: scale(0.98); }
     </style>
@@ -124,61 +114,95 @@
 
     <h2>Бронирование места</h2>
     
-    <!-- Подсказка по цветам -->
     <div class="legend">
         <div class="legend-item"><div class="box free"></div> Свободно</div>
         <div class="legend-item"><div class="box occupied"></div> Занято</div>
         <div class="legend-item"><div class="box selected"></div> Ваш выбор</div>
     </div>
 
-    <!-- Сетка из 46 капсул -->
     <div class="capsule-grid" id="capsulesContainer"></div>
 
-    <!-- Выбор пакета проживания -->
     <div class="section">
-        <h3>Пакет проживания</h3>
-        <select id="tariffSelect">
-            <option value="5000">Сутки - 5 000 ₸</option>
-            <option value="30000">Неделя - 30 000 ₸ (Экономия 5 000 ₸)</option>
-            <option value="90000">Месяц - 90 000 ₸ (Выгода 40%)</option>
-        </select>
+        <h3>Выгодные тарифы</h3>
+        <div class="tariffs-container">
+            
+            <!-- 1 СУТКИ (КАЛЬКУЛЯТОР) -->
+            <div class="tariff-card selected" id="card-standard" onclick="selectTariff('standard')">
+                <div class="tariff-header">
+                    <div class="tariff-title">Стандарт (сутки)</div>
+                    <div class="tariff-price">2 000 ₸</div>
+                </div>
+                <div class="calculator">
+                    <div class="calc-controls">
+                        <button class="calc-btn" onclick="changeDays(-1, event)">-</button>
+                        <div class="calc-value" id="daysCount">1</div>
+                        <button class="calc-btn" onclick="changeDays(1, event)">+</button>
+                    </div>
+                    <div class="calc-total">Итого: <span id="standardTotal">2 000</span> ₸</div>
+                </div>
+            </div>
+
+            <!-- ПАКЕТ 5 СУТОК -->
+            <div class="tariff-card" onclick="selectTariff('5days')">
+                <div class="tariff-header">
+                    <div class="tariff-title">5 суток</div>
+                    <div class="tariff-price">9 000 ₸</div>
+                </div>
+                <div class="tariff-save">Экономия 1 000 ₸</div>
+                <div class="discount-badge">Скидка 10%</div>
+            </div>
+
+            <!-- ПАКЕТ 15 СУТОК -->
+            <div class="tariff-card" onclick="selectTariff('15days')">
+                <div class="tariff-header">
+                    <div class="tariff-title">15 суток</div>
+                    <div class="tariff-price">24 000 ₸</div>
+                </div>
+                <div class="tariff-save">Экономия 6 000 ₸</div>
+                <div class="discount-badge">Скидка 20%</div>
+            </div>
+
+            <!-- ПАКЕТ 30 СУТОК -->
+            <div class="tariff-card" onclick="selectTariff('30days')">
+                <div class="tariff-header">
+                    <div class="tariff-title">30 суток</div>
+                    <div class="tariff-price">35 000 ₸</div>
+                </div>
+                <div class="tariff-save">Экономия 25 000 ₸</div>
+                <div class="discount-badge">Скидка 42%</div>
+            </div>
+
+        </div>
     </div>
 
-    <!-- Выбор способа оплаты -->
     <div class="section">
         <h3>Способ оплаты</h3>
         <select id="paymentMethod">
-            <option value="kaspi">Kaspi Pay</option>
-            <option value="other_banks">Оплата через другие банки (Единый QR)</option>
+            <option value="kaspi">Kaspi bank / Единый QR</option>
             <option value="apple_google">Apple Pay / Google Pay</option>
         </select>
     </div>
 
-    <!-- Кнопка -->
-    <button class="pay-btn" id="payButton" onclick="sendDataToBot()">Продолжить</button>
+    <button class="pay-btn" onclick="sendDataToBot()">Продолжить</button>
 
     <script>
-        // Инициализация Telegram
         let tg = window.Telegram.WebApp;
         tg.expand();
 
+        // Логика капсул
         let selectedCapsule = null;
         const container = document.getElementById('capsulesContainer');
         
-        // Генерация капсул
         for (let i = 1; i <= 46; i++) {
             let div = document.createElement('div');
             div.className = 'capsule';
             div.innerText = i;
             
-            // Тестово закрасим 2 и 7 капсулы в красный (Занято)
             if (i === 2 || i === 7) {
                 div.classList.add('occupied');
             } else {
                 div.onclick = function() {
-                    // Сбрасываем желтый цвет у других
                     document.querySelectorAll('.capsule').forEach(c => c.classList.remove('selected'));
-                    // Красим выбранную в желтый
                     div.classList.add('selected');
                     selectedCapsule = i;
                 };
@@ -186,19 +210,64 @@
             container.appendChild(div);
         }
 
-        // Отправка в бота
+        // Логика тарифов и калькулятора
+        let currentTariff = 'standard';
+        let customDays = 1;
+        const pricePerDay = 2000;
+
+        function selectTariff(type) {
+            currentTariff = type;
+            document.querySelectorAll('.tariff-card').forEach(card => card.classList.remove('selected'));
+            event.currentTarget.classList.add('selected');
+        }
+
+        function changeDays(delta, e) {
+            e.stopPropagation(); // Чтобы при клике на +/- карточка не мигала
+            if (customDays + delta > 0) {
+                customDays += delta;
+                document.getElementById('daysCount').innerText = customDays;
+                
+                // Форматируем сумму с пробелами (например, 4 000)
+                let total = customDays * pricePerDay;
+                document.getElementById('standardTotal').innerText = total.toLocaleString('ru-RU');
+                
+                // Принудительно делаем карточку активной, если пользователь кликнул сразу на +/-
+                document.querySelectorAll('.tariff-card').forEach(card => card.classList.remove('selected'));
+                document.getElementById('card-standard').classList.add('selected');
+                currentTariff = 'standard';
+            }
+        }
+
+        // Отправка в бота n8n
         function sendDataToBot() {
             if (!selectedCapsule) {
                 tg.showAlert("Пожалуйста, выберите свободную капсулу на схеме (зеленого цвета)!");
                 return;
             }
             
-            let tariff = document.getElementById('tariffSelect').value;
+            let finalAmount = 0;
+            let tariffName = "";
+
+            if (currentTariff === 'standard') {
+                finalAmount = customDays * pricePerDay;
+                tariffName = "Стандарт (" + customDays + " суток)";
+            } else if (currentTariff === '5days') {
+                finalAmount = 9000;
+                tariffName = "Пакет 5 суток";
+            } else if (currentTariff === '15days') {
+                finalAmount = 24000;
+                tariffName = "Пакет 15 суток";
+            } else if (currentTariff === '30days') {
+                finalAmount = 35000;
+                tariffName = "Пакет 30 суток";
+            }
+
             let payment = document.getElementById('paymentMethod').value;
 
             let orderData = {
                 capsule: "Капсула " + selectedCapsule,
-                amount: tariff,
+                amount: finalAmount,
+                tariff_name: tariffName,
                 payment_method: payment,
                 user_id: tg.initDataUnsafe?.user?.id || "unknown_user"
             };
