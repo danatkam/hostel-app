@@ -3,16 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Капсульный Хостел</title>
+    <title>Капсульный Хостел Астана</title>
     <!-- Обязательный скрипт для связи с Telegram -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { font-family: sans-serif; padding: 20px; text-align: center; background-color: #f4f4f9; color: #333; }
-        .container { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        h2 { margin-top: 0; }
-        label { display: block; text-align: left; margin-bottom: 5px; font-weight: bold; }
+        body { font-family: sans-serif; padding: 20px; background-color: #f4f4f9; color: #333; margin: 0; }
+        .container { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h2 { margin-top: 0; text-align: center; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; }
         select { width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; }
-        .price-box { font-size: 18px; margin: 15px 0; }
+        .price-box { font-size: 18px; margin: 15px 0; text-align: center; }
+        .footer-text { text-align: center; margin-top: 15px; font-size: 14px; color: #888; }
         button { padding: 15px 30px; font-size: 16px; background-color: #28a745; color: white; border: none; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold; }
         button:disabled { background-color: #ccc; }
     </style>
@@ -21,8 +22,7 @@
     <div class="container">
         <h2>Оформление брони</h2>
         
-        <!-- Выбор капсулы -->
-        <label for="capsule">Выберите капсулу:</label>
+        <label for="capsule">Выбор капсулы:</label>
         <select id="capsule">
             <option value="Капсула 1">Капсула 1</option>
             <option value="Капсула 2">Капсула 2</option>
@@ -30,53 +30,50 @@
             <option value="Капсула 4">Капсула 4</option>
         </select>
 
-        <!-- Выбор тарифа -->
-        <label for="tariff">Выберите тариф:</label>
+        <label for="tariff">Выбор тарифа:</label>
         <select id="tariff" onchange="updatePrice()">
             <option value="Стандарт (1 суток)" data-price="2000">Стандарт (1 суток) - 2000 ₸</option>
             <option value="Стандарт (2 суток)" data-price="3800">Стандарт (2 суток) - 3800 ₸</option>
             <option value="Неделя (7 суток)" data-price="12000">Неделя (7 суток) - 12000 ₸</option>
         </select>
 
-        <!-- Отображение суммы -->
         <div class="price-box">
             <b>💰 К оплате: <span id="amountDisplay">2000</span> ₸</b>
         </div>
         
-        <!-- Кнопка отправки -->
         <button id="mainButton" onclick="sendOrder()">Продолжить</button>
+        
+        <div class="footer-text">@hostelkzbot</div>
     </div>
 
     <script>
-        // Инициализация Telegram WebApp
+        // Инициализация Telegram
         const tg = window.Telegram.WebApp;
-        tg.expand();
+        tg.expand(); // Разворачиваем окно на весь экран
 
-        // Функция для обновления цены на экране при выборе тарифа
+        // Смена цены при выборе тарифа
         function updatePrice() {
             const tariffSelect = document.getElementById("tariff");
-            const selectedOption = tariffSelect.options[tariffSelect.selectedIndex];
-            const price = selectedOption.getAttribute("data-price");
+            const price = tariffSelect.options[tariffSelect.selectedIndex].getAttribute("data-price");
             document.getElementById("amountDisplay").innerText = price;
         }
 
-        // Функция отправки заказа
+        // Отправка заказа
         function sendOrder() {
             const btn = document.getElementById("mainButton");
             btn.innerText = "Отправка...";
             btn.disabled = true;
 
-            // 1. Получаем реальный Telegram ID
+            // БЕЗОПАСНОЕ ПОЛУЧЕНИЕ ID
             const user = tg.initDataUnsafe?.user;
             const userId = user ? user.id : "unknown_user";
 
-            // 2. Собираем данные с формы
+            // Сбор данных
             const capsule = document.getElementById("capsule").value;
             const tariffSelect = document.getElementById("tariff");
             const tariffName = tariffSelect.value;
             const amount = parseInt(tariffSelect.options[tariffSelect.selectedIndex].getAttribute("data-price"));
 
-            // 3. Формируем пакет данных для n8n
             const orderData = {
                 capsule: capsule,
                 amount: amount,
@@ -85,7 +82,7 @@
                 user_id: userId
             };
 
-            // 4. Отправляем на БОЕВУЮ ссылку n8n
+            // ОТПРАВКА НА БОЕВУЮ ССЫЛКУ N8N
             fetch('https://n8n.uhostkz.qzz.io/webhook/229fee1f-edd2-412f-9da0-28219dffbf7e', {
                 method: 'POST',
                 headers: {
@@ -95,16 +92,16 @@
             })
             .then(response => {
                 if (response.ok) {
-                    tg.showAlert("✅ Данные приняты! Бот сейчас пришлет реквизиты.");
-                    setTimeout(() => tg.close(), 2000); // Закрываем Mini App
+                    tg.showAlert("✅ Заявка отправлена!");
+                    setTimeout(() => tg.close(), 1500);
                 } else {
-                    tg.showAlert("❌ Ошибка сервера. Попробуйте еще раз.");
+                    tg.showAlert("❌ Ошибка сервера.");
                     btn.innerText = "Продолжить";
                     btn.disabled = false;
                 }
             })
             .catch(error => {
-                tg.showAlert("❌ Ошибка сети: " + error.message);
+                tg.showAlert("❌ Ошибка соединения.");
                 btn.innerText = "Продолжить";
                 btn.disabled = false;
             });
