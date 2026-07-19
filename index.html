@@ -271,7 +271,18 @@
                 user_id: tg.initDataUnsafe?.user?.id || "unknown_user"
             };
 
-            tg.sendData(JSON.stringify(orderData));
+            // Отправляем данные напрямую в n8n через Webhook
+            fetch('https://n8n.uhostkz.qzz.io/webhook-test/229fee1f-edd2-412f-9da0-28219dffbf7e', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(orderData)
+            }).then(response => {
+                tg.close(); // Закрываем приложение после успешной отправки
+            }).catch(error => {
+                tg.showAlert("Ошибка соединения с сервером");
+            });
             tg.close();
         }
     </script>
