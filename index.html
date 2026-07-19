@@ -4,77 +4,181 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Бронирование Капсулы</title>
-    <!-- Подключаем скрипт Telegram Mini App [i] -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { font-family: sans-serif; padding: 20px; background-color: var(--tg-theme-bg-color, #fff); color: var(--tg-theme-text-color, #000); }
-        h2 { text-align: center; }
-        /* Сетка капсул как в кинотеатре */
-        .capsule-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
-        .capsule { 
-            padding: 15px 0; text-align: center; border-radius: 8px; border: 1px solid #ccc; 
-            cursor: pointer; background-color: #e0ffe0; /* Зеленый - свободные */
-            transition: 0.3s;
+        /* Современный и чистый дизайн */
+        :root {
+            --bg-color: var(--tg-theme-bg-color, #f4f7f6);
+            --text-color: var(--tg-theme-text-color, #333);
+            --free-color: #28a745; /* Ярко-зеленый */
+            --occupied-color: #dc3545; /* Ярко-красный */
+            --selected-color: #ffc107; /* Ярко-желтый */
         }
-        .capsule.occupied { background-color: #d3d3d3; cursor: not-allowed; color: #888; border-color: #aaa; } /* Серый - занятые */
-        .capsule.selected { background-color: #007bff; color: #fff; border-color: #0056b3; } /* Синий - выбранный [i] */
         
-        /* Пакеты и оплата */
-        .section { margin-bottom: 20px; }
-        select, button { width: 100%; padding: 12px; margin-top: 10px; border-radius: 8px; font-size: 16px; }
-        .pay-btn { background-color: var(--tg-theme-button-color, #3390ec); color: var(--tg-theme-button-text-color, #fff); border: none; font-weight: bold; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+            padding: 20px; 
+            background-color: var(--bg-color); 
+            color: var(--text-color); 
+            margin: 0;
+        }
+        
+        h2 { text-align: center; margin-bottom: 15px; font-weight: 700; font-size: 22px; }
+        
+        /* Легенда (Подсказка по цветам) */
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 25px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .legend-item { display: flex; align-items: center; gap: 6px; }
+        .box { width: 16px; height: 16px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .box.free { background-color: var(--free-color); }
+        .box.occupied { background-color: var(--occupied-color); }
+        .box.selected { background-color: var(--selected-color); }
+
+        /* Сетка капсул */
+        .capsule-grid { 
+            display: grid; 
+            grid-template-columns: repeat(4, 1fr); 
+            gap: 12px; 
+            margin-bottom: 25px; 
+        }
+        
+        .capsule { 
+            padding: 16px 0; 
+            text-align: center; 
+            border-radius: 12px; 
+            font-size: 18px;
+            font-weight: 800;
+            cursor: pointer; 
+            background-color: var(--free-color);
+            color: #ffffff; /* Белые цифры на зеленом/красном фоне */
+            box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+            transition: all 0.2s ease;
+        }
+        
+        .capsule:active { transform: scale(0.95); }
+        
+        .capsule.occupied { 
+            background-color: var(--occupied-color); 
+            cursor: not-allowed; 
+            opacity: 0.9;
+        } 
+        
+        .capsule.selected { 
+            background-color: var(--selected-color); 
+            color: #000000; /* Черные цифры на желтом фоне для читаемости */
+            transform: scale(1.08);
+            box-shadow: 0 6px 12px rgba(255, 193, 7, 0.5);
+            border: 2px solid #d39e00;
+        } 
+        
+        /* Блоки выбора тарифов и оплаты */
+        .section { 
+            background: #ffffff;
+            padding: 16px;
+            border-radius: 14px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+        }
+        
+        .section h3 { margin-top: 0; margin-bottom: 12px; font-size: 16px; color: #111; }
+        
+        select { 
+            width: 100%; 
+            padding: 14px; 
+            border-radius: 10px; 
+            border: 1px solid #ddd;
+            font-size: 15px; 
+            font-weight: 500;
+            background-color: #f8f9fa;
+            color: #333;
+            outline: none;
+            appearance: none; /* Убирает стандартную стрелку в некоторых браузерах */
+        }
+        select:focus { border-color: #007bff; }
+        
+        /* Кнопка оплаты */
+        .pay-btn { 
+            width: 100%;
+            background-color: var(--tg-theme-button-color, #007bff); 
+            color: var(--tg-theme-button-text-color, #fff); 
+            padding: 16px;
+            border: none; 
+            border-radius: 14px;
+            font-size: 18px; 
+            font-weight: bold; 
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+            transition: background 0.3s, transform 0.1s;
+            margin-top: 10px;
+        }
+        .pay-btn:active { background-color: #0056b3; transform: scale(0.98); }
     </style>
 </head>
 <body>
 
-    <h2>Выберите капсулу</h2>
+    <h2>Бронирование места</h2>
     
-    <div class="capsule-grid" id="capsulesContainer">
-        <!-- Капсулы сгенерируются скриптом ниже -->
+    <!-- Подсказка по цветам -->
+    <div class="legend">
+        <div class="legend-item"><div class="box free"></div> Свободно</div>
+        <div class="legend-item"><div class="box occupied"></div> Занято</div>
+        <div class="legend-item"><div class="box selected"></div> Ваш выбор</div>
     </div>
 
+    <!-- Сетка из 46 капсул -->
+    <div class="capsule-grid" id="capsulesContainer"></div>
+
+    <!-- Выбор пакета проживания -->
     <div class="section">
         <h3>Пакет проживания</h3>
         <select id="tariffSelect">
-            <option value="5000">Сутки - 5 000 тг</option>
-            <option value="30000">Неделя - 30 000 тг (Выгода 5 000 тг)</option>
-            <option value="90000">Месяц - 90 000 тг (Выгода 40%)</option>
+            <option value="5000">Сутки - 5 000 ₸</option>
+            <option value="30000">Неделя - 30 000 ₸ (Экономия 5 000 ₸)</option>
+            <option value="90000">Месяц - 90 000 ₸ (Выгода 40%)</option>
         </select>
     </div>
 
+    <!-- Выбор способа оплаты -->
     <div class="section">
         <h3>Способ оплаты</h3>
         <select id="paymentMethod">
-            <option value="kaspi">Kaspi / Единый QR</option>
+            <option value="kaspi">Kaspi Pay</option>
+            <option value="other_banks">Оплата через другие банки (Единый QR)</option>
             <option value="apple_google">Apple Pay / Google Pay</option>
-            <option value="transfer">Перевод по реквизитам</option>
         </select>
     </div>
 
-    <button class="pay-btn" id="payButton" onclick="sendDataToBot()">Перейти к оплате</button>
+    <!-- Кнопка -->
+    <button class="pay-btn" id="payButton" onclick="sendDataToBot()">Продолжить</button>
 
     <script>
-        // Инициализация Telegram Web App [i]
+        // Инициализация Telegram
         let tg = window.Telegram.WebApp;
-        tg.expand(); // Открыть на весь экран [i]
+        tg.expand();
 
         let selectedCapsule = null;
-
-        // Генерация 46 капсул
         const container = document.getElementById('capsulesContainer');
+        
+        // Генерация капсул
         for (let i = 1; i <= 46; i++) {
             let div = document.createElement('div');
             div.className = 'capsule';
             div.innerText = i;
             
-            // Для теста сделаем 1-ю капсулу занятой (чтобы вы видели, как это выглядит)
-            if (i === 1) {
+            // Тестово закрасим 2 и 7 капсулы в красный (Занято)
+            if (i === 2 || i === 7) {
                 div.classList.add('occupied');
             } else {
                 div.onclick = function() {
-                    // Убираем выделение со всех
+                    // Сбрасываем желтый цвет у других
                     document.querySelectorAll('.capsule').forEach(c => c.classList.remove('selected'));
-                    // Выделяем нажатую
+                    // Красим выбранную в желтый
                     div.classList.add('selected');
                     selectedCapsule = i;
                 };
@@ -82,10 +186,10 @@
             container.appendChild(div);
         }
 
-        // Отправка данных обратно в бота/n8n при нажатии "Оплатить"
+        // Отправка в бота
         function sendDataToBot() {
             if (!selectedCapsule) {
-                tg.showAlert("Пожалуйста, выберите свободную капсулу!");
+                tg.showAlert("Пожалуйста, выберите свободную капсулу на схеме (зеленого цвета)!");
                 return;
             }
             
@@ -96,12 +200,11 @@
                 capsule: "Капсула " + selectedCapsule,
                 amount: tariff,
                 payment_method: payment,
-                user_id: tg.initDataUnsafe?.user?.id || "test_user"
+                user_id: tg.initDataUnsafe?.user?.id || "unknown_user"
             };
 
-            // Отправляем данные обратно в Telegram, чтобы n8n их поймал
             tg.sendData(JSON.stringify(orderData));
-            tg.close(); // Закрываем Mini App
+            tg.close();
         }
     </script>
 </body>
