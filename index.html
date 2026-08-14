@@ -244,17 +244,17 @@
             color: var(--button-bg);
         }
 
-        /* Выбор способа оплаты */
-        select {
-            width: 100%;
+        /* Информационный блок оплаты */
+        .payment-info-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
             padding: 12px;
+            background: rgba(0, 123, 255, 0.05);
+            border: 1px solid rgba(0, 123, 255, 0.15);
             border-radius: 10px;
-            border: 1px solid rgba(0, 0, 0, 0.12);
-            font-size: 14px;
-            font-weight: 500;
-            background-color: var(--card-bg);
             color: var(--text-color);
-            outline: none;
+            font-weight: 600;
         }
 
         /* Кнопка действия */
@@ -464,7 +464,7 @@
         <div class="section">
             <h2>Выберите тариф</h2>
             <div class="tariffs-container">
-                <div class="tariff-card selected" id="card-standard" onclick="selectTariff('standard', this)">
+                <div class="tariff-card" id="card-standard" onclick="selectTariff('standard', this)">
                     <div class="tariff-header">
                         <span class="tariff-title">Стандарт (сутки)</span>
                         <span class="tariff-price">2 000 ₸ / сутки</span>
@@ -489,7 +489,7 @@
                     <div class="discount-badge">Выгодно (1800 ₸/сутки)</div>
                 </div>
 
-                <div class="tariff-card" onclick="selectTariff('15days', this)">
+                <div class="tariff-card selected" onclick="selectTariff('15days', this)">
                     <div class="tariff-header">
                         <span class="tariff-title">Пакет 15 суток</span>
                         <span class="tariff-price">24 000 ₸</span>
@@ -511,11 +511,9 @@
 
         <div class="section">
             <h2>Способ оплаты</h2>
-            <select id="paymentMethod">
-                <option value="Kaspi POS">Kaspi POS Терминал (на ресепшене)</option>
-                <option value="Kaspi Перевод">Kaspi Перевод</option>
-                <option value="Наличные">Наличные администратору</option>
-            </select>
+            <div class="payment-info-box">
+                💳 Kaspi POS Терминал (на ресепшене)
+            </div>
         </div>
 
         <button class="action-btn" onclick="sendBooking()">Забронировать капсулу</button>
@@ -550,7 +548,7 @@
         tg.expand();
 
         let selectedCapsule = null;
-        let currentTariff = 'standard';
+        let currentTariff = '15days'; // По умолчанию выделяем Пакет 15 суток
         let customDays = 1;
         
         let occupiedCapsules = []; 
@@ -585,7 +583,7 @@
             const checkIn = new Date();
             let checkOut = new Date();
             
-            let days = 1;
+            let days = 15; // Дефолтные 15 суток
             if (currentTariff === 'standard') days = customDays;
             else if (currentTariff === '5days') days = 5;
             else if (currentTariff === '15days') days = 15;
@@ -598,7 +596,7 @@
             };
         }
 
-        // Парсер дат формата DD.MM.YYYY
+        // Безупречный парсер дат формата DD.MM.YYYY
         function parseDate(dateStr) {
             if (!dateStr) return null;
             try {
@@ -610,7 +608,7 @@
                 const month = parseInt(dateParts[1], 10) - 1; 
                 const year = parseInt(dateParts[2], 10);
                 
-                let hours = 12; // По дефолту выезд в 12:00
+                let hours = 12; // Время выезда по стандарту в 12:00
                 let minutes = 0;
                 if (parts[1]) {
                     const timeParts = parts[1].split(':');
@@ -624,6 +622,21 @@
                 console.error("Ошибка разбора даты:", e);
                 return null;
             }
+        }
+
+        // Автоматический калькулятор тарифа на основе разницы дат заезда и выезда
+        function determineTariff(checkInStr, checkOutStr) {
+            const start = parseDate(checkInStr);
+            const end = parseDate(checkOutStr);
+            if (!start || !end) return "Стандарт";
+            
+            const diffMs = end - start;
+            const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+            
+            if (diffDays === 5) return "Пакет 5 суток";
+            if (diffDays === 15) return "Пакет 15 суток";
+            if (diffDays === 30) return "Пакет 30 суток";
+            return `Стандарт (${diffDays} сут.)`;
         }
 
         // --- ЗАПРОС ДАННЫХ ---
@@ -685,7 +698,9 @@
                 const rawStatus = getValueByKeys(userRow, ['Статус', 'status']) || "Ожидает";
                 const checkInDate = getValueByKeys(userRow, ['Время заезда', 'Дата заезда', 'Заезд', 'check_in']) || "Уточняется...";
                 const checkOutDate = getValueByKeys(userRow, ['Время выезда', 'Дата выезда', 'Выезд', 'check_out']) || "Уточняется...";
-                const tariffName = getValueByKeys(userRow, ['Тариф', 'tariff']) || "Стандарт";
+                
+                // Считаем тариф динамически на основе заезда и выезда
+                const tariffName = determineTariff(checkInDate, checkOutDate);
 
                 let statusText = "Оплачено / Активна";
                 let statusClass = "status-active";
@@ -895,8 +910,8 @@
                 tariffName = "Пакет 30 суток";
             }
 
-            const paymentMethod = document.getElementById('paymentMethod').value;
-            const dates = getDatesForTariff(); // Рассчитываем даты
+            const paymentMethod = "Kaspi POS";
+            const dates = getDatesForTariff(); 
 
             const orderData = {
                 name: userName,
