@@ -9,8 +9,9 @@
     <style>
         :root {
             --free-color: #28a745;       /* Зеленый - свободно */
+            --pending-color: #ffc107;    /* Желтый - забронировано (ожидает оплаты 10 мин) */
             --occupied-color: #dc3545;   /* Красный - занято */
-            --selected-color: #ffc107;   /* Желтый/Золотой - выбрано */
+            --selected-color: #fd7e14;   /* Оранжевый - ваш выбор прямо сейчас */
             --main-bg: var(--tg-theme-bg-color, #f4f6f9);
             --text-color: var(--tg-theme-text-color, #333);
             --hint-color: var(--tg-theme-hint-color, #8e8e93);
@@ -85,12 +86,15 @@
 
         /* Легенда */
         .legend {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin-bottom: 20px;
-            font-size: 13px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-bottom: 15px;
+            font-size: 12px;
             font-weight: 600;
+            background: rgba(0, 0, 0, 0.02);
+            padding: 10px;
+            border-radius: 8px;
         }
         .legend-item {
             display: flex;
@@ -98,12 +102,13 @@
             gap: 6px;
         }
         .box {
-            width: 16px;
-            height: 16px;
+            width: 14px;
+            height: 14px;
             border-radius: 4px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
         .box.free { background-color: var(--free-color); }
+        .box.pending { background-color: var(--pending-color); }
         .box.occupied { background-color: var(--occupied-color); }
         .box.selected { background-color: var(--selected-color); }
 
@@ -141,12 +146,19 @@
             cursor: not-allowed;
             opacity: 0.6;
         }
+        .capsule.pending {
+            background-color: var(--pending-color);
+            color: #000000;
+            cursor: not-allowed;
+            opacity: 0.85;
+            box-shadow: none;
+        }
         .capsule.selected {
             background-color: var(--selected-color);
-            color: #000000;
+            color: #ffffff;
             transform: scale(1.05);
-            box-shadow: 0 4px 10px rgba(255, 193, 7, 0.4);
-            border: 2px solid #d39e00;
+            box-shadow: 0 4px 10px rgba(253, 126, 20, 0.4);
+            border: 2px solid #d0600c;
         }
 
         /* Тарифы */
@@ -455,6 +467,7 @@
             <h2>Выберите свободную капсулу</h2>
             <div class="legend">
                 <div class="legend-item"><div class="box free"></div> Свободно</div>
+                <div class="legend-item"><div class="box pending"></div> Ожидает оплаты (10 мин)</div>
                 <div class="legend-item"><div class="box occupied"></div> Занято</div>
                 <div class="legend-item"><div class="box selected"></div> Ваш выбор</div>
             </div>
@@ -552,6 +565,7 @@
         let customDays = 1;
         
         let occupiedCapsules = []; 
+        let pendingCapsules = [];  // Желтые капсулы (ожидают оплаты)
         let allBookingsData = [];  
 
         const user = tg.initDataUnsafe?.user;
@@ -596,20 +610,25 @@
             };
         }
 
-        // Безупречный парсер дат формата DD.MM.YYYY
+        // ПОЛНОСТЬЮ ИСПРАВЛЕННЫЙ, БЕЗУПРЕЧНЫЙ ПАРСЕР ДАТ
         function parseDate(dateStr) {
             if (!dateStr) return null;
             try {
                 const cleanStr = String(dateStr).trim();
                 const parts = cleanStr.split(' ');
+                
+                // Берем первую часть (дату) и делим по точкам
                 const dateParts = parts[0].split('.');
                 if (dateParts.length !== 3) return null;
+                
                 const day = parseInt(dateParts[0], 10);
                 const month = parseInt(dateParts[1], 10) - 1; 
                 const year = parseInt(dateParts[2], 10);
                 
                 let hours = 12; // Время выезда по стандарту в 12:00
                 let minutes = 0;
+                
+                // Если есть время (вторая часть)
                 if (parts[1]) {
                     const timeParts = parts[1].split(':');
                     if (timeParts.length >= 2) {
@@ -656,15 +675,21 @@
                 
                 allBookingsData = rows;
                 occupiedCapsules = [];
+                pendingCapsules = []; // Очищаем массив перед заполнением
 
                 rows.forEach(item => {
                     const status = getValueByKeys(item, ['Статус', 'status']);
                     const capsuleStr = getValueByKeys(item, ['Капсула', 'capsule', 'Номер']);
                     
-                    if ((status === 'Занята' || status === 'Оплачено') && capsuleStr) {
+                    if (capsuleStr) {
                         const match = String(capsuleStr).match(/\d+/);
                         if (match) {
-                            occupiedCapsules.push(parseInt(match));
+                            const num = parseInt(match);
+                            if (status === 'Занята' || status === 'Оплачено') {
+                                occupiedCapsules.push(num);
+                            } else if (status === 'Ожидает оплаты') {
+                                pendingCapsules.push(num); // Добавляем в желтые
+                            }
                         }
                     }
                 });
@@ -819,10 +844,12 @@
                 cap.textContent = i;
                 
                 if (occupiedCapsules.includes(i)) {
-                    cap.classList.add('occupied');
+                    cap.classList.add('occupied'); // Красная (занято)
+                } else if (pendingCapsules.includes(i)) {
+                    cap.classList.add('pending');   // Желтая (ожидает оплаты)
                 } else {
                     if (selectedCapsule === i) {
-                        cap.classList.add('selected');
+                        cap.classList.add('selected'); // Оранжевая (выбрано прямо сейчас)
                     }
                     cap.onclick = () => selectCapsule(i, cap);
                 }
