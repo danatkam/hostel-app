@@ -601,23 +601,29 @@
         // Парсер дат формата DD.MM.YYYY
         function parseDate(dateStr) {
             if (!dateStr) return null;
-            const parts = String(dateStr).trim().split(' ');
-            const dateParts = parts[0].split('.');
-            if (dateParts.length !== 3) return null;
-            const day = parseInt(dateParts[0], 10);
-            const month = parseInt(dateParts[1], 10) - 1; 
-            const year = parseInt(dateParts[2], 10);
-            
-            let hours = 12; // Расчетное время выезда в 12:00 дня
-            let minutes = 0;
-            if (parts[1]) {
-                const timeParts = parts[1].split(':');
-                if (timeParts.length >= 2) {
-                    hours = parseInt(timeParts[0], 10);
-                    minutes = parseInt(timeParts[1], 10);
+            try {
+                const cleanStr = String(dateStr).trim();
+                const parts = cleanStr.split(' ');
+                const dateParts = parts[0].split('.');
+                if (dateParts.length !== 3) return null;
+                const day = parseInt(dateParts[0], 10);
+                const month = parseInt(dateParts[1], 10) - 1; 
+                const year = parseInt(dateParts[2], 10);
+                
+                let hours = 12; // По дефолту выезд в 12:00
+                let minutes = 0;
+                if (parts[1]) {
+                    const timeParts = parts[1].split(':');
+                    if (timeParts.length >= 2) {
+                        hours = parseInt(timeParts[0], 10);
+                        minutes = parseInt(timeParts[1], 10);
+                    }
                 }
+                return new Date(year, month, day, hours, minutes);
+            } catch (e) {
+                console.error("Ошибка разбора даты:", e);
+                return null;
             }
-            return new Date(year, month, day, hours, minutes);
         }
 
         // --- ЗАПРОС ДАННЫХ ---
@@ -849,7 +855,6 @@
             if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
         }
 
-        // Динамическое изменение суток в калькуляторе
         function updateDays(change, event) {
             event.stopPropagation();
             customDays = Math.max(1, customDays + change);
@@ -891,7 +896,7 @@
             }
 
             const paymentMethod = document.getElementById('paymentMethod').value;
-            const dates = getDatesForTariff(); // Авторасчет заезда и выезда
+            const dates = getDatesForTariff(); // Рассчитываем даты
 
             const orderData = {
                 name: userName,
