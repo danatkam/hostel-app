@@ -287,17 +287,17 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 30px 10px;
+            padding: 10px 0;
             text-align: center;
         }
         .lock-status {
-            font-size: 16px;
+            font-size: 15px;
             color: var(--hint-color);
-            margin-bottom: 25px;
+            margin-bottom: 20px;
         }
         .lock-circle {
-            width: 150px;
-            height: 150px;
+            width: 140px;
+            height: 140px;
             border-radius: 50%;
             background: #007bff;
             display: flex;
@@ -307,21 +307,78 @@
             cursor: pointer;
             transition: all 0.3s ease;
             user-select: none;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
         }
         .lock-circle:active {
             transform: scale(0.92);
             box-shadow: 0 5px 15px rgba(0, 123, 255, 0.2);
         }
         .lock-icon {
-            font-size: 55px;
+            font-size: 50px;
             color: #ffffff;
         }
         .lock-hint {
-            font-size: 13px;
+            font-size: 12px;
             color: var(--hint-color);
-            max-width: 250px;
+            max-width: 260px;
             line-height: 1.4;
+        }
+
+        /* Карточка активной брони */
+        .booking-info-card {
+            width: 100%;
+            background: rgba(0, 123, 255, 0.05);
+            border: 1px dashed var(--button-bg);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        .card-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+            padding-bottom: 6px;
+        }
+        .card-row:last-child {
+            margin-bottom: 0;
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+        .card-label {
+            color: var(--hint-color);
+            font-weight: 500;
+        }
+        .card-value {
+            font-weight: 700;
+            color: var(--text-color);
+        }
+        .highlight-capsule {
+            color: var(--button-bg);
+            font-size: 16px;
+        }
+        .highlight-pin {
+            font-size: 18px;
+            color: #28a745;
+            letter-spacing: 1px;
+        }
+        .card-status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-top: 10px;
+        }
+        .status-active {
+            background-color: #28a745;
+            color: white;
+        }
+        .status-pending {
+            background-color: #ffc107;
+            color: black;
         }
 
         /* Информационные плашки */
@@ -485,15 +542,22 @@
     <!-- ВКЛАДКА 2: УПРАВЛЕНИЕ ЗАМКОМ -->
     <div id="controlTab" class="tab-content">
         <div class="section lock-container">
-            <h2>Открыть капсулу издалека</h2>
-            <div class="lock-status" id="lockStatusText">Нажмите на замок, чтобы открыть дверь</div>
-            
-            <div class="lock-circle" onclick="triggerUnlock()">
-                <span class="lock-icon" id="lockIcon">🔓</span>
+            <!-- Динамическая карточка бронирования -->
+            <div id="bookingCardContainer" style="width: 100%;">
+                <div class="booking-info-card" style="text-align: center;">
+                    <span style="color: var(--hint-color);">Загрузка информации о вашей капсуле...</span>
+                </div>
             </div>
             
-            <div class="lock-hint">
-                Эта кнопка отправляет команду на замок вашей капсулы через защищенный шлюз G2. Дверь откроется на 5 секунд.
+            <!-- Кнопка управления замком -->
+            <div id="lockControlUI" style="display: none; align-items: center; flex-direction: column;">
+                <div class="lock-status" id="lockStatusText">Нажмите на замок, чтобы открыть дверь</div>
+                <div class="lock-circle" onclick="triggerUnlock()">
+                    <span class="lock-icon" id="lockIcon">🔓</span>
+                </div>
+                <div class="lock-hint">
+                    Эта кнопка отправляет команду на замок вашей капсулы через защищенный шлюз G2. Дверь откроется на 5 секунд.
+                </div>
             </div>
         </div>
     </div>
@@ -509,11 +573,13 @@
         let selectedCapsule = null;
         let currentTariff = 'standard';
         let customDays = 1;
-        let occupiedCapsules = []; // Сюда загрузим номера занятых капсул
+        
+        let occupiedCapsules = []; // Массив занятых номеров капсул
+        let allBookingsData = [];  // Все строки из Google Sheets
 
         // --- НАСТРОЙКА ДАННЫХ ПОЛЬЗОВАТЕЛЯ ---
         const user = tg.initDataUnsafe?.user;
-        const telegramId = user?.id ? String(user.id) : "673717738"; // Твой реальный ID по дефолту
+        const telegramId = user?.id ? String(user.id) : "673717738"; // Твой ID
         const userName = user ? `${user.first_name} ${user.last_name || ''}`.trim() : "Данат (Тест)";
 
         // Обновляем шапку профиля
@@ -521,35 +587,143 @@
         document.getElementById('userIdLabel').textContent = "ID: " + telegramId;
         document.getElementById('avatarLetter').textContent = userName.charAt(0).toUpperCase();
 
-        // --- ДИНАМИЧЕСКИЙ ЗАПРОС ЗАНЯТЫХ КАПСУЛ ---
-        function loadOccupiedCapsules() {
+        // Универсальный хелпер для поиска значений по неточным названиям колонок таблицы
+        function getValueByKeys(obj, possibleKeys) {
+            for (let key of possibleKeys) {
+                if (obj[key] !== undefined) return obj[key];
+                const foundKey = Object.keys(obj).find(k => k.toLowerCase().trim() === key.toLowerCase().trim());
+                if (foundKey && obj[foundKey] !== undefined) return obj[foundKey];
+            }
+            return null;
+        }
+
+        // --- ДИНАМИЧЕСКИЙ ЗАПРОС ВСЕЙ ТАБЛИЦЫ ИЗ n8n ---
+        function loadSheetsData() {
             fetch('https://n8n.uhostkz.qzz.io/webhook/get-occupied')
             .then(response => {
-                if (!response.ok) throw new Error('Ошибка сети');
+                if (!response.ok) throw new Error('Ошибка сети при запросе к n8n');
                 return response.json();
             })
             .then(data => {
-                occupiedCapsules = [];
-                // data - это массив строк из Google Sheets, пришедший напрямую через n8n
+                // n8n может вернуть как массив json-объектов напрямую, так и массив с вложенным json
+                let rows = [];
                 if (Array.isArray(data)) {
-                    data.forEach(item => {
-                        const status = item['Статус'];
-                        const capsuleStr = item['Капсула']; // Например, "Капсула 5"
-                        
-                        if (status === 'Занята' && capsuleStr) {
-                            const match = capsuleStr.match(/\d+/); // Вытаскиваем цифру капсулы
-                            if (match) {
-                                occupiedCapsules.push(parseInt(match[0]));
-                            }
-                        }
-                    });
+                    rows = data.map(item => item.json ? item.json : item);
+                } else if (data && typeof data === 'object') {
+                    rows = [data.json ? data.json : data];
                 }
-                renderCapsuleGrid(); // Рисуем сетку с реальными данными!
+                
+                allBookingsData = rows;
+                occupiedCapsules = [];
+
+                // 1. Собираем занятые капсулы для сетки
+                rows.forEach(item => {
+                    const status = getValueByKeys(item, ['Статус', 'status']);
+                    const capsuleStr = getValueByKeys(item, ['Капсула', 'capsule', 'Номер']);
+                    
+                    if ((status === 'Занята' || status === 'Оплачено') && capsuleStr) {
+                        const match = String(capsuleStr).match(/\d+/); // вытаскиваем цифры
+                        if (match) {
+                            occupiedCapsules.push(parseInt(match[0]));
+                        }
+                    }
+                });
+
+                // Перерисовываем сетку капсул на первой вкладке
+                renderCapsuleGrid();
+
+                // 2. Ищем бронь текущего пользователя для второй вкладки
+                updateMyCapsuleTab(rows);
             })
             .catch(error => {
-                console.error('Ошибка загрузки занятых капсул:', error);
+                console.error('Ошибка загрузки данных:', error);
                 renderCapsuleGrid(); // В случае сбоя рисуем пустую сетку
+                document.getElementById('bookingCardContainer').innerHTML = `
+                    <div class="booking-info-card" style="border-color: #dc3545; background: rgba(220, 53, 69, 0.05); text-align: center;">
+                        <span style="color: #dc3545; font-weight: bold;">Ошибка обновления данных. Проверьте интернет.</span>
+                    </div>
+                `;
             });
+        }
+
+        // --- ОБНОВЛЕНИЕ ИНФОРМАЦИИ НА ВКЛАДКЕ «МОЯ КАПСУЛА» ---
+        function updateMyCapsuleTab(rows) {
+            const container = document.getElementById('bookingCardContainer');
+            const lockUI = document.getElementById('lockControlUI');
+
+            // Ищем строку по Telegram ID пользователя
+            const userRow = rows.find(row => {
+                const tgIdVal = getValueByKeys(row, ['Telegram ID', 'telegram_id', 'telegramid', 'id']);
+                return tgIdVal && String(tgIdVal).trim() === String(telegramId).trim();
+            });
+
+            if (userRow) {
+                const capsuleName = getValueByKeys(userRow, ['Капсула', 'capsule', 'Номер']) || "Не указана";
+                const pinCode = getValueByKeys(userRow, ['Код доступа', 'Код', 'PIN', 'pin', 'пин-код', 'пин код']) || "Создаётся...";
+                const rawStatus = getValueByKeys(userRow, ['Статус', 'status']) || "Ожидает";
+                const checkInDate = getValueByKeys(userRow, ['Дата заезда', 'Заезд', 'Дата', 'date', 'Время']) || "Не указана";
+                const tariffName = getValueByKeys(userRow, ['Тариф', 'tariff']) || "Стандарт";
+
+                let statusText = "Оплачено / Активна";
+                let statusClass = "status-active";
+                let showLock = false;
+
+                if (rawStatus === 'Занята' || rawStatus === 'Оплачено') {
+                    statusText = "ЗАСЕЛЕН / ОПЛАЧЕНО";
+                    statusClass = "status-active";
+                    showLock = true; // Замок виден только если капсула оплачена
+                } else if (rawStatus === 'Ожидает оплаты' || rawStatus === 'Забронировано') {
+                    statusText = "ОЖИДАЕТ ОПЛАТЫ";
+                    statusClass = "status-pending";
+                }
+
+                container.innerHTML = `
+                    <div class="booking-info-card">
+                        <div class="card-row">
+                            <span class="card-label">Ваша капсула:</span>
+                            <span class="card-value highlight-capsule">${capsuleName}</span>
+                        </div>
+                        <div class="card-row">
+                            <span class="card-label">Код на двери (PIN):</span>
+                            <span class="card-value highlight-pin">${pinCode}</span>
+                        </div>
+                        <div class="card-row">
+                            <span class="card-label">Дата заезда:</span>
+                            <span class="card-value">${checkInDate}</span>
+                        </div>
+                        <div class="card-row">
+                            <span class="card-label">Тариф:</span>
+                            <span class="card-value">${tariffName}</span>
+                        </div>
+                        <div style="text-align: center;">
+                            <span class="card-status-badge ${statusClass}">${statusText}</span>
+                        </div>
+                    </div>
+                `;
+
+                if (showLock) {
+                    lockUI.style.display = 'flex';
+                } else {
+                    lockUI.style.display = 'none';
+                    container.innerHTML += `
+                        <div style="color: var(--hint-color); font-size: 13px; text-align: center; margin-top: 15px; padding: 0 10px;">
+                            🔒 Дистанционное открытие и код доступа будут активны сразу после подтверждения оплаты на рецепции.
+                        </div>
+                    `;
+                }
+            } else {
+                // Если бронирования нет в таблице вообще
+                container.innerHTML = `
+                    <div class="booking-info-card" style="border-color: var(--hint-color); background: rgba(0,0,0,0.02); text-align: center; padding: 25px 15px;">
+                        <span style="font-size: 40px; display: block; margin-bottom: 10px;">🛏️</span>
+                        <span style="color: var(--text-color); font-weight: bold; font-size: 15px; display: block; margin-bottom: 5px;">Активных бронирований не найдено</span>
+                        <span style="color: var(--hint-color); font-size: 12px; display: block; line-height: 1.4;">
+                            Перейдите на вкладку «Бронирование», выберите свободную капсулу и подтвердите заказ.
+                        </span>
+                    </div>
+                `;
+                lockUI.style.display = 'none';
+            }
         }
 
         // --- ГЕНЕРАЦИЯ СЕТКИ КАПСУЛ ---
@@ -565,14 +739,17 @@
                 if (occupiedCapsules.includes(i)) {
                     cap.classList.add('occupied'); // Красим занятые в красный
                 } else {
+                    if (selectedCapsule === i) {
+                        cap.classList.add('selected');
+                    }
                     cap.onclick = () => selectCapsule(i, cap);
                 }
                 grid.appendChild(cap);
             }
         }
 
-        // Запуск автозагрузки при старте приложения
-        loadOccupiedCapsules();
+        // Запуск автозагрузки данных при старте приложения
+        loadSheetsData();
 
         // Выбор капсулы
         function selectCapsule(num, element) {
@@ -598,10 +775,11 @@
             if (tabId === 'booking') {
                 document.querySelector('.tab-btn:nth-child(1)').classList.add('active');
                 document.getElementById('bookingTab').classList.add('active');
-                loadOccupiedCapsules(); // При переходе на бронирование обновляем список занятых капсул!
+                loadSheetsData(); // Обновляем данные таблицы при открытии вкладки бронирования
             } else {
                 document.querySelector('.tab-btn:nth-child(2)').classList.add('active');
                 document.getElementById('controlTab').classList.add('active');
+                loadSheetsData(); // Обновляем данные таблицы при открытии вкладки управления замками
             }
             if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
         }
@@ -699,7 +877,7 @@
             
             statusText.textContent = "Открываем замок...";
             lockIcon.textContent = "⚡";
-            
+
             const requestData = {
                 telegram_id: telegramId
             };
