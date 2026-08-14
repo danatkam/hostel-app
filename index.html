@@ -509,6 +509,7 @@
         let selectedCapsule = null;
         let currentTariff = 'standard';
         let customDays = 1;
+        let occupiedCapsules = []; // Сюда загрузим номера занятых капсул
 
         // --- НАСТРОЙКА ДАННЫХ ПОЛЬЗОВАТЕЛЯ ---
         const user = tg.initDataUnsafe?.user;
@@ -520,23 +521,58 @@
         document.getElementById('userIdLabel').textContent = "ID: " + telegramId;
         document.getElementById('avatarLetter').textContent = userName.charAt(0).toUpperCase();
 
-        // --- ГЕНЕРАЦИЯ 46 КАПСУЛ ---
-        const grid = document.getElementById('capsuleGrid');
-        // Занятые капсулы для теста (заменили ошибку на реальный массив)
-        const occupiedCapsules = [2, 5, 12];
-
-        for (let i = 1; i <= 46; i++) {
-            const cap = document.createElement('div');
-            cap.className = 'capsule';
-            cap.textContent = i;
-            
-            if (occupiedCapsules.includes(i)) {
-                cap.classList.add('occupied');
-            } else {
-                cap.onclick = () => selectCapsule(i, cap);
-            }
-            grid.appendChild(cap);
+        // --- ДИНАМИЧЕСКИЙ ЗАПРОС ЗАНЯТЫХ КАПСУЛ ---
+        function loadOccupiedCapsules() {
+            fetch('https://n8n.uhostkz.qzz.io/webhook/get-occupied')
+            .then(response => {
+                if (!response.ok) throw new Error('Ошибка сети');
+                return response.json();
+            })
+            .then(data => {
+                occupiedCapsules = [];
+                // data - это массив строк из Google Sheets, пришедший напрямую через n8n
+                if (Array.isArray(data)) {
+                    data.forEach(item => {
+                        const status = item['Статус'];
+                        const capsuleStr = item['Капсула']; // Например, "Капсула 5"
+                        
+                        if (status === 'Занята' && capsuleStr) {
+                            const match = capsuleStr.match(/\d+/); // Вытаскиваем цифру капсулы
+                            if (match) {
+                                occupiedCapsules.push(parseInt(match[0]));
+                            }
+                        }
+                    });
+                }
+                renderCapsuleGrid(); // Рисуем сетку с реальными данными!
+            })
+            .catch(error => {
+                console.error('Ошибка загрузки занятых капсул:', error);
+                renderCapsuleGrid(); // В случае сбоя рисуем пустую сетку
+            });
         }
+
+        // --- ГЕНЕРАЦИЯ СЕТКИ КАПСУЛ ---
+        function renderCapsuleGrid() {
+            const grid = document.getElementById('capsuleGrid');
+            grid.innerHTML = ''; // Очищаем старые капсулы
+
+            for (let i = 1; i <= 46; i++) {
+                const cap = document.createElement('div');
+                cap.className = 'capsule';
+                cap.textContent = i;
+                
+                if (occupiedCapsules.includes(i)) {
+                    cap.classList.add('occupied'); // Красим занятые в красный
+                } else {
+                    cap.onclick = () => selectCapsule(i, cap);
+                }
+                grid.appendChild(cap);
+            }
+        }
+
+        // Запуск автозагрузки при старте приложения
+        loadOccupiedCapsules();
 
         // Выбор капсулы
         function selectCapsule(num, element) {
@@ -546,11 +582,10 @@
             }
             
             if (selectedCapsule === num) {
-                selectedCapsule = null; // Отмена выбора при повторном клике
+                selectedCapsule = null; // Отмена выбора
             } else {
                 element.classList.add('selected');
                 selectedCapsule = num;
-                // Легкая вибрация телефона при выборе
                 if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
             }
         }
@@ -563,6 +598,7 @@
             if (tabId === 'booking') {
                 document.querySelector('.tab-btn:nth-child(1)').classList.add('active');
                 document.getElementById('bookingTab').classList.add('active');
+                loadOccupiedCapsules(); // При переходе на бронирование обновляем список занятых капсул!
             } else {
                 document.querySelector('.tab-btn:nth-child(2)').classList.add('active');
                 document.getElementById('controlTab').classList.add('active');
@@ -580,7 +616,7 @@
 
         // Изменение дней в калькуляторе стандартного тарифа
         function updateDays(change, event) {
-            event.stopPropagation(); // Чтобы не срабатывал клик по самой карточке тарифа
+            event.stopPropagation();
             customDays = Math.max(1, customDays + change);
             document.getElementById('daysValue').textContent = customDays;
             document.getElementById('calcTotal').textContent = `Итого: ${customDays * 2000} ₸`;
@@ -645,7 +681,7 @@
             .then(response => {
                 if (response.ok) {
                     showToast("Успешно забронировано!");
-                    setTimeout(() => tg.close(), 1500); // Закрываем Mini App после тоста
+                    setTimeout(() => tg.close(), 1500); // Закрываем Mini App
                 } else {
                     showToast("Ошибка на сервере бронирования", true);
                 }
@@ -684,7 +720,6 @@
                     statusText.textContent = "Дверь успешно разблокирована!";
                     showToast(data.message || "Капсула успешно открыта!");
                     
-                    // Возвращаем исходное состояние через 5 секунд (время автозакрытия замка)
                     setTimeout(() => {
                         lockIcon.textContent = "🔓";
                         statusText.textContent = "Нажмите на замок, чтобы открыть дверь";
