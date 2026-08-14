@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>U-Host Astana — Бронирование и Управление</title>
-    <!-- Подключаем официальный скрипт Telegram WebApp -->
+    <!-- Подключаем скрипт Telegram WebApp -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
@@ -41,7 +41,7 @@
             color: var(--text-color);
         }
 
-        /* Навигация по вкладкам (Табы) */
+        /* Табы */
         .tabs {
             display: flex;
             background: rgba(0, 0, 0, 0.05);
@@ -76,7 +76,6 @@
             box-shadow: 0 2px 10px rgba(0,0,0,0.04);
         }
 
-        /* Скрытие неактивных экранов */
         .tab-content {
             display: none;
         }
@@ -150,7 +149,7 @@
             border: 2px solid #d39e00;
         }
 
-        /* Карточки тарифов */
+        /* Тарифы */
         .tariffs-container {
             display: flex;
             flex-direction: column;
@@ -198,7 +197,7 @@
             margin-top: 2px;
         }
 
-        /* Калькулятор в стандартном тарифе */
+        /* Калькулятор суток */
         .calculator {
             display: none;
             justify-content: space-between;
@@ -257,11 +256,8 @@
             color: var(--text-color);
             outline: none;
         }
-        select:focus {
-            border-color: var(--button-bg);
-        }
 
-        /* Общая кнопка действия */
+        /* Кнопка действия */
         .action-btn {
             width: 100%;
             background-color: var(--button-bg);
@@ -278,10 +274,9 @@
         }
         .action-btn:active {
             transform: scale(0.98);
-            opacity: 0.9;
         }
 
-        /* Стили для экрана управления замком */
+        /* Управление замком */
         .lock-container {
             display: flex;
             flex-direction: column;
@@ -311,7 +306,6 @@
         }
         .lock-circle:active {
             transform: scale(0.92);
-            box-shadow: 0 5px 15px rgba(0, 123, 255, 0.2);
         }
         .lock-icon {
             font-size: 50px;
@@ -381,7 +375,7 @@
             color: black;
         }
 
-        /* Информационные плашки */
+        /* Профиль */
         .user-badge {
             display: flex;
             align-items: center;
@@ -417,7 +411,7 @@
             color: var(--hint-color);
         }
 
-        /* Кастомный Toast (Всплывашка) */
+        /* Toast */
         .toast {
             position: fixed;
             bottom: 20px;
@@ -442,7 +436,6 @@
 </head>
 <body>
 
-    <!-- Шапка профиля пользователя -->
     <div class="user-badge">
         <div class="user-avatar" id="avatarLetter">D</div>
         <div class="user-details">
@@ -451,7 +444,6 @@
         </div>
     </div>
 
-    <!-- Вкладки навигации -->
     <div class="tabs">
         <button class="tab-btn active" onclick="switchTab('booking')">📝 Бронирование</button>
         <button class="tab-btn" onclick="switchTab('control')">🔑 Моя капсула</button>
@@ -459,7 +451,6 @@
 
     <!-- ВКЛАДКА 1: БРОНИРОВАНИЕ -->
     <div id="bookingTab" class="tab-content active">
-        <!-- Выбор капсулы -->
         <div class="section">
             <h2>Выберите свободную капсулу</h2>
             <div class="legend">
@@ -467,16 +458,12 @@
                 <div class="legend-item"><div class="box occupied"></div> Занято</div>
                 <div class="legend-item"><div class="box selected"></div> Ваш выбор</div>
             </div>
-            <div class="capsule-grid" id="capsuleGrid">
-                <!-- Капсулы сгенерируются кодом JS -->
-            </div>
+            <div class="capsule-grid" id="capsuleGrid"></div>
         </div>
 
-        <!-- Выбор тарифа -->
         <div class="section">
             <h2>Выберите тариф</h2>
             <div class="tariffs-container">
-                <!-- Стандартные сутки -->
                 <div class="tariff-card selected" id="card-standard" onclick="selectTariff('standard', this)">
                     <div class="tariff-header">
                         <span class="tariff-title">Стандарт (сутки)</span>
@@ -493,7 +480,6 @@
                     </div>
                 </div>
 
-                <!-- Пакет 5 суток -->
                 <div class="tariff-card" onclick="selectTariff('5days', this)">
                     <div class="tariff-header">
                         <span class="tariff-title">Пакет 5 суток</span>
@@ -503,7 +489,6 @@
                     <div class="discount-badge">Выгодно (1800 ₸/сутки)</div>
                 </div>
 
-                <!-- Пакет 15 суток -->
                 <div class="tariff-card" onclick="selectTariff('15days', this)">
                     <div class="tariff-header">
                         <span class="tariff-title">Пакет 15 суток</span>
@@ -513,7 +498,6 @@
                     <div class="discount-badge">Популярно (1600 ₸/сутки)</div>
                 </div>
 
-                <!-- Пакет 30 суток -->
                 <div class="tariff-card" onclick="selectTariff('30days', this)">
                     <div class="tariff-header">
                         <span class="tariff-title">Пакет 30 суток</span>
@@ -525,7 +509,6 @@
             </div>
         </div>
 
-        <!-- Способ оплаты -->
         <div class="section">
             <h2>Способ оплаты</h2>
             <select id="paymentMethod">
@@ -535,21 +518,18 @@
             </select>
         </div>
 
-        <!-- Кнопка бронирования -->
         <button class="action-btn" onclick="sendBooking()">Забронировать капсулу</button>
     </div>
 
     <!-- ВКЛАДКА 2: УПРАВЛЕНИЕ ЗАМКОМ -->
     <div id="controlTab" class="tab-content">
         <div class="section lock-container">
-            <!-- Динамическая карточка бронирования -->
             <div id="bookingCardContainer" style="width: 100%;">
                 <div class="booking-info-card" style="text-align: center;">
                     <span style="color: var(--hint-color);">Загрузка информации о вашей капсуле...</span>
                 </div>
             </div>
             
-            <!-- Кнопка управления замком -->
             <div id="lockControlUI" style="display: none; align-items: center; flex-direction: column;">
                 <div class="lock-status" id="lockStatusText">Нажмите на замок, чтобы открыть дверь</div>
                 <div class="lock-circle" onclick="triggerUnlock()">
@@ -562,50 +542,92 @@
         </div>
     </div>
 
-    <!-- Всплывающий Тост-Уведомление -->
     <div class="toast" id="customToast">Капсула успешно открыта!</div>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.ready();
-        tg.expand(); // Открываем Mini App на весь экран
+        tg.expand();
 
         let selectedCapsule = null;
         let currentTariff = 'standard';
         let customDays = 1;
         
-        let occupiedCapsules = []; // Массив занятых номеров капсул
-        let allBookingsData = [];  // Все строки из Google Sheets
+        let occupiedCapsules = []; 
+        let allBookingsData = [];  
 
-        // --- НАСТРОЙКА ДАННЫХ ПОЛЬЗОВАТЕЛЯ ---
         const user = tg.initDataUnsafe?.user;
-        const telegramId = user?.id ? String(user.id) : "673717738"; // Твой ID
+        const telegramId = user?.id ? String(user.id) : "673717738"; 
         const userName = user ? `${user.first_name} ${user.last_name || ''}`.trim() : "Данат (Тест)";
 
-        // Обновляем шапку профиля
         document.getElementById('userNameLabel').textContent = userName;
         document.getElementById('userIdLabel').textContent = "ID: " + telegramId;
         document.getElementById('avatarLetter').textContent = userName.charAt(0).toUpperCase();
 
-        // Универсальный хелпер для поиска значений по неточным названиям колонок таблицы
         function getValueByKeys(obj, possibleKeys) {
             for (let key of possibleKeys) {
-                if (obj[key] !== undefined) return obj[key];
+                if (obj[key] !== undefined && obj[key] !== null && obj[key] !== '') return obj[key];
                 const foundKey = Object.keys(obj).find(k => k.toLowerCase().trim() === key.toLowerCase().trim());
-                if (foundKey && obj[foundKey] !== undefined) return obj[foundKey];
+                if (foundKey && obj[foundKey] !== undefined && obj[foundKey] !== null && obj[foundKey] !== '') return obj[foundKey];
             }
             return null;
         }
 
-        // --- ДИНАМИЧЕСКИЙ ЗАПРОС ВСЕЙ ТАБЛИЦЫ ИЗ n8n ---
+        // --- ДАТЫ: РАСЧЕТ И ПАРСИНГ ---
+        function formatDate(date) {
+            const d = date.getDate().toString().padStart(2, '0');
+            const m = (date.getMonth() + 1).toString().padStart(2, '0');
+            const y = date.getFullYear();
+            return `${d}.${m}.${y}`;
+        }
+
+        function getDatesForTariff() {
+            const checkIn = new Date();
+            let checkOut = new Date();
+            
+            let days = 1;
+            if (currentTariff === 'standard') days = customDays;
+            else if (currentTariff === '5days') days = 5;
+            else if (currentTariff === '15days') days = 15;
+            else if (currentTariff === '30days') days = 30;
+
+            checkOut.setDate(checkIn.getDate() + days);
+            return {
+                checkInStr: formatDate(checkIn),
+                checkOutStr: formatDate(checkOut)
+            };
+        }
+
+        // Парсер дат формата DD.MM.YYYY
+        function parseDate(dateStr) {
+            if (!dateStr) return null;
+            const parts = String(dateStr).trim().split(' ');
+            const dateParts = parts[0].split('.');
+            if (dateParts.length !== 3) return null;
+            const day = parseInt(dateParts[0], 10);
+            const month = parseInt(dateParts[1], 10) - 1; 
+            const year = parseInt(dateParts[2], 10);
+            
+            let hours = 12; // Расчетное время выезда в 12:00 дня
+            let minutes = 0;
+            if (parts[1]) {
+                const timeParts = parts[1].split(':');
+                if (timeParts.length >= 2) {
+                    hours = parseInt(timeParts[0], 10);
+                    minutes = parseInt(timeParts[1], 10);
+                }
+            }
+            return new Date(year, month, day, hours, minutes);
+        }
+
+        // --- ЗАПРОС ДАННЫХ ---
         function loadSheetsData() {
             fetch('https://n8n.uhostkz.qzz.io/webhook/get-occupied')
             .then(response => {
-                if (!response.ok) throw new Error('Ошибка сети при запросе к n8n');
+                if (!response.ok) throw new Error('Ошибка сети');
                 return response.json();
             })
             .then(data => {
-                // n8n может вернуть как массив json-объектов напрямую, так и массив с вложенным json
                 let rows = [];
                 if (Array.isArray(data)) {
                     rows = data.map(item => item.json ? item.json : item);
@@ -616,42 +638,36 @@
                 allBookingsData = rows;
                 occupiedCapsules = [];
 
-                // 1. Собираем занятые капсулы для сетки
                 rows.forEach(item => {
                     const status = getValueByKeys(item, ['Статус', 'status']);
                     const capsuleStr = getValueByKeys(item, ['Капсула', 'capsule', 'Номер']);
                     
                     if ((status === 'Занята' || status === 'Оплачено') && capsuleStr) {
-                        const match = String(capsuleStr).match(/\d+/); // вытаскиваем цифры
+                        const match = String(capsuleStr).match(/\d+/);
                         if (match) {
-                            occupiedCapsules.push(parseInt(match[0]));
+                            occupiedCapsules.push(parseInt(match));
                         }
                     }
                 });
 
-                // Перерисовываем сетку капсул на первой вкладке
                 renderCapsuleGrid();
-
-                // 2. Ищем бронь текущего пользователя для второй вкладки
                 updateMyCapsuleTab(rows);
             })
             .catch(error => {
                 console.error('Ошибка загрузки данных:', error);
-                renderCapsuleGrid(); // В случае сбоя рисуем пустую сетку
+                renderCapsuleGrid();
                 document.getElementById('bookingCardContainer').innerHTML = `
                     <div class="booking-info-card" style="border-color: #dc3545; background: rgba(220, 53, 69, 0.05); text-align: center;">
-                        <span style="color: #dc3545; font-weight: bold;">Ошибка обновления данных. Проверьте интернет.</span>
+                        <span style="color: #dc3545; font-weight: bold;">Ошибка синхронизации данных.</span>
                     </div>
                 `;
             });
         }
 
-        // --- ОБНОВЛЕНИЕ ИНФОРМАЦИИ НА ВКЛАДКЕ «МОЯ КАПСУЛА» ---
         function updateMyCapsuleTab(rows) {
             const container = document.getElementById('bookingCardContainer');
             const lockUI = document.getElementById('lockControlUI');
 
-            // Ищем строку по Telegram ID пользователя
             const userRow = rows.find(row => {
                 const tgIdVal = getValueByKeys(row, ['Telegram ID', 'telegram_id', 'telegramid', 'id']);
                 return tgIdVal && String(tgIdVal).trim() === String(telegramId).trim();
@@ -659,9 +675,10 @@
 
             if (userRow) {
                 const capsuleName = getValueByKeys(userRow, ['Капсула', 'capsule', 'Номер']) || "Не указана";
-                const pinCode = getValueByKeys(userRow, ['Код доступа', 'Код', 'PIN', 'pin', 'пин-код', 'пин код']) || "Создаётся...";
+                const pinCode = getValueByKeys(userRow, ['PIN-код', 'Код доступа', 'Код', 'PIN', 'pin', 'пин-код']) || "Создаётся...";
                 const rawStatus = getValueByKeys(userRow, ['Статус', 'status']) || "Ожидает";
-                const checkInDate = getValueByKeys(userRow, ['Дата заезда', 'Заезд', 'Дата', 'date', 'Время']) || "Не указана";
+                const checkInDate = getValueByKeys(userRow, ['Время заезда', 'Дата заезда', 'Заезд', 'check_in']) || "Уточняется...";
+                const checkOutDate = getValueByKeys(userRow, ['Время выезда', 'Дата выезда', 'Выезд', 'check_out']) || "Уточняется...";
                 const tariffName = getValueByKeys(userRow, ['Тариф', 'tariff']) || "Стандарт";
 
                 let statusText = "Оплачено / Активна";
@@ -671,10 +688,51 @@
                 if (rawStatus === 'Занята' || rawStatus === 'Оплачено') {
                     statusText = "ЗАСЕЛЕН / ОПЛАЧЕНО";
                     statusClass = "status-active";
-                    showLock = true; // Замок виден только если капсула оплачена
-                } else if (rawStatus === 'Ожидает оплаты' || rawStatus === 'Забронировано') {
+                    showLock = true;
+                } else {
                     statusText = "ОЖИДАЕТ ОПЛАТЫ";
                     statusClass = "status-pending";
+                }
+
+                // --- РАСЧЕТ НАПОМИНАЛКИ О ВЫЕЗДЕ ---
+                let remainingTimeHtml = '';
+                const checkOutParsed = parseDate(checkOutDate);
+                
+                if (checkOutParsed && showLock) {
+                    const now = new Date();
+                    const diffMs = checkOutParsed - now;
+                    let timeLeftText = "";
+                    let timeLeftStyle = "color: #28a745; font-weight: bold;"; // зеленый по дефолту
+
+                    if (diffMs > 0) {
+                        const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+                        const diffHours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                        const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+
+                        if (diffDays > 0) {
+                            timeLeftText = `${diffDays} дн. ${diffHours} ч.`;
+                        } else {
+                            timeLeftText = `${diffHours} ч. ${diffMins} мин.`;
+                            timeLeftStyle = "color: #ffc107; font-weight: bold;"; // желтый если < 24ч
+                        }
+                    } else {
+                        timeLeftText = "Время истекло! Требуется выезд";
+                        timeLeftStyle = "color: #dc3545; font-weight: bold;"; // красный если просрочено
+                    }
+
+                    remainingTimeHtml = `
+                        <div class="card-row" style="background: rgba(0,0,0,0.02); padding: 8px; border-radius: 6px; margin-top: 10px;">
+                            <span class="card-label">Осталось времени:</span>
+                            <span class="card-value" style="${timeLeftStyle}">${timeLeftText}</span>
+                        </div>
+                    `;
+                } else if (showLock) {
+                    remainingTimeHtml = `
+                        <div class="card-row" style="background: rgba(0,0,0,0.02); padding: 8px; border-radius: 6px; margin-top: 10px;">
+                            <span class="card-label">Осталось времени:</span>
+                            <span class="card-value" style="color: var(--hint-color);">Уточняется администратором</span>
+                        </div>
+                    `;
                 }
 
                 container.innerHTML = `
@@ -689,12 +747,17 @@
                         </div>
                         <div class="card-row">
                             <span class="card-label">Дата заезда:</span>
-                            <span class="card-value">${checkInDate}</span>
+                            <span class="card-value" style="font-size:12px;">${checkInDate}</span>
+                        </div>
+                        <div class="card-row">
+                            <span class="card-label">Дата выезда:</span>
+                            <span class="card-value" style="font-size:12px;">${checkOutDate}</span>
                         </div>
                         <div class="card-row">
                             <span class="card-label">Тариф:</span>
                             <span class="card-value">${tariffName}</span>
                         </div>
+                        ${remainingTimeHtml}
                         <div style="text-align: center;">
                             <span class="card-status-badge ${statusClass}">${statusText}</span>
                         </div>
@@ -707,12 +770,11 @@
                     lockUI.style.display = 'none';
                     container.innerHTML += `
                         <div style="color: var(--hint-color); font-size: 13px; text-align: center; margin-top: 15px; padding: 0 10px;">
-                            🔒 Дистанционное открытие и код доступа будут активны сразу после подтверждения оплаты на рецепции.
+                            🔒 Дистанционное открытие и код доступа активируются после подтверждения оплаты администратором.
                         </div>
                     `;
                 }
             } else {
-                // Если бронирования нет в таблице вообще
                 container.innerHTML = `
                     <div class="booking-info-card" style="border-color: var(--hint-color); background: rgba(0,0,0,0.02); text-align: center; padding: 25px 15px;">
                         <span style="font-size: 40px; display: block; margin-bottom: 10px;">🛏️</span>
@@ -726,10 +788,9 @@
             }
         }
 
-        // --- ГЕНЕРАЦИЯ СЕТКИ КАПСУЛ ---
         function renderCapsuleGrid() {
             const grid = document.getElementById('capsuleGrid');
-            grid.innerHTML = ''; // Очищаем старые капсулы
+            grid.innerHTML = '';
 
             for (let i = 1; i <= 46; i++) {
                 const cap = document.createElement('div');
@@ -737,7 +798,7 @@
                 cap.textContent = i;
                 
                 if (occupiedCapsules.includes(i)) {
-                    cap.classList.add('occupied'); // Красим занятые в красный
+                    cap.classList.add('occupied');
                 } else {
                     if (selectedCapsule === i) {
                         cap.classList.add('selected');
@@ -748,10 +809,8 @@
             }
         }
 
-        // Запуск автозагрузки данных при старте приложения
         loadSheetsData();
 
-        // Выбор капсулы
         function selectCapsule(num, element) {
             const previouslySelected = document.querySelector('.capsule.selected');
             if (previouslySelected) {
@@ -759,7 +818,7 @@
             }
             
             if (selectedCapsule === num) {
-                selectedCapsule = null; // Отмена выбора
+                selectedCapsule = null;
             } else {
                 element.classList.add('selected');
                 selectedCapsule = num;
@@ -767,7 +826,6 @@
             }
         }
 
-        // Навигация по вкладкам (Табы)
         function switchTab(tabId) {
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
@@ -775,16 +833,15 @@
             if (tabId === 'booking') {
                 document.querySelector('.tab-btn:nth-child(1)').classList.add('active');
                 document.getElementById('bookingTab').classList.add('active');
-                loadSheetsData(); // Обновляем данные таблицы при открытии вкладки бронирования
+                loadSheetsData();
             } else {
                 document.querySelector('.tab-btn:nth-child(2)').classList.add('active');
                 document.getElementById('controlTab').classList.add('active');
-                loadSheetsData(); // Обновляем данные таблицы при открытии вкладки управления замками
+                loadSheetsData();
             }
             if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
         }
 
-        // Выбор тарифа
         function selectTariff(tariffId, element) {
             document.querySelectorAll('.tariff-card').forEach(card => card.classList.remove('selected'));
             element.classList.add('selected');
@@ -792,7 +849,7 @@
             if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
         }
 
-        // Изменение дней в калькуляторе стандартного тарифа
+        // Динамическое изменение суток в калькуляторе
         function updateDays(change, event) {
             event.stopPropagation();
             customDays = Math.max(1, customDays + change);
@@ -800,7 +857,6 @@
             document.getElementById('calcTotal').textContent = `Итого: ${customDays * 2000} ₸`;
         }
 
-        // Кастомное красивое всплывающее уведомление
         function showToast(message, isError = false) {
             const toast = document.getElementById('customToast');
             toast.textContent = message;
@@ -811,7 +867,6 @@
             }, 3000);
         }
 
-        // --- ОТПРАВКА БРОНИРОВАНИЯ НА ВЕБХУК n8n (ВЕРХНЯЯ ВЕТКА) ---
         function sendBooking() {
             if (!selectedCapsule) {
                 showToast("Пожалуйста, выберите капсулу!", true);
@@ -819,7 +874,7 @@
             }
 
             let finalAmount = 2000;
-            let tariffName = "Стандарт (сутки)";
+            let tariffName = "Стандарт";
 
             if (currentTariff === 'standard') {
                 finalAmount = customDays * 2000;
@@ -836,6 +891,7 @@
             }
 
             const paymentMethod = document.getElementById('paymentMethod').value;
+            const dates = getDatesForTariff(); // Авторасчет заезда и выезда
 
             const orderData = {
                 name: userName,
@@ -843,12 +899,13 @@
                 capsule: "Капсула " + selectedCapsule,
                 tariff: tariffName,
                 amount: finalAmount,
-                payment_method: paymentMethod
+                payment_method: paymentMethod,
+                check_in: dates.checkInStr,
+                check_out: dates.checkOutStr
             };
 
             if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
 
-            // Отправляем POST запрос напрямую на вебхук n8n (Верхняя ветка бронирования)
             fetch('https://n8n.uhostkz.qzz.io/webhook/new-booking', {
                 method: 'POST',
                 headers: {
@@ -859,7 +916,7 @@
             .then(response => {
                 if (response.ok) {
                     showToast("Успешно забронировано!");
-                    setTimeout(() => tg.close(), 1500); // Закрываем Mini App
+                    setTimeout(() => tg.close(), 1500);
                 } else {
                     showToast("Ошибка на сервере бронирования", true);
                 }
@@ -870,7 +927,6 @@
             });
         }
 
-        // --- УПРАВЛЕНИЕ ЗАМКОМ НА ВЕБХУК n8n (НИЖНЯЯ ВЕТКА) ---
         function triggerUnlock() {
             const statusText = document.getElementById('lockStatusText');
             const lockIcon = document.getElementById('lockIcon');
@@ -882,7 +938,6 @@
                 telegram_id: telegramId
             };
 
-            // Отправляем POST запрос на нижний вебхук lock-control
             fetch('https://n8n.uhostkz.qzz.io/webhook/lock-control', {
                 method: 'POST',
                 headers: {
